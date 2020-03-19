@@ -1,0 +1,39 @@
+# This framework evolved from a collaboration of:
+# - Research Laboratory of Electronics, Massachusetts Institute of Technology, Cambdrige, MA, US
+# - Pattern Recognition Lab, Friedrich-Alexander-Universitaet Erlangen-Nuernberg, Germany
+# - Department of Biomedical Engineering, Peking University, Beijing, China
+# - New England Eye Center, Tufts Medical Center, Boston, MA, US
+# v1.0: Updated on Mar 20, 2019
+# @author: Daniel Stromer - EMAIL:daniel.stromer@fau.de
+# Copyright (C) 2018-2019 - Daniel Stromer
+# PRLE is developed as an Open Source project under the GNU General Public License (GPL) v3.0.
+
+The executable file can be found in the "dist/PRLEC/ folder and is named "PRLEC_OCT_Processing.exe".
+When built new, it is called PRLEC.exe.
+
+For building an executable file, the author used pyinstaller.
+
+The following steps were necessary to successfully create an .exe file.
+
+a) Install modules if necessary
+	i) pip install pyinstaller
+	i) pip install -U setuptools
+
+b) We faced the problem that pyinstaller could not autoamtically fetch skimage.io. We added
+   a hook manually. To do so, create a file named "hook-skimage.io.py: with the following 
+   content (taken from https://stackoverflow.com/a/35043355):
+
+	from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+	datas = collect_data_files("skimage.io._plugins")`
+	hiddenimports = collect_submodules('skimage.io._plugins')
+
+   Place this file in the hook folder of pyinstaller. For us, this directory was found at:
+   C:/users/mit/appdata/local/programs/python/pyhton35/lib/site-packages/pyinstaller/hooks/
+
+c) The spec is already generated. Only if you added new things, you may have to adapt it.
+   You can create an executable by changing to the work directory in the shell and running:
+
+   pyinstaller prlec.spec
+
+   The .exe file will be located in the "dist" directory.

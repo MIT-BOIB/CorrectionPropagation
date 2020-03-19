@@ -1,0 +1,28 @@
+BM_VALUE=255
+RPE_VALUE=64
+ILM_VALUE=127
+AUTO_ILM_BF_ENFACE=9,5,5
+AUTO_ILM_BF_BSCAN=7,5,5
+AUTO_RPE_BF_ENFACE=9,5,5
+AUTO_RPE_BF_BSCAN=7,5,5
+MAN_ILM_BF_BSCAN=5,3,3
+MAN_RPE_BF_BSCAN=7,5,5
+MAN_ILM_MEDIAN=11
+MAN_RPE_MEDIAN=9
+MAN_BM_MEDIAN=31
+MAN_ILM_THICKNESS=3
+MAN_RPE_THICKNESS=5
+MAN_BM_THICKNESS=2
+REF_RPE_BF_ENFACE=5,2,2
+REF_RPE_BF_BSCAN=5,2,2
+SMALLWINDOW=False
+
+# This framework evolved from a collaboration of:
+# - Research Laboratory of Electronics, Massachusetts Institute of Technology, Cambdrige, MA, US
+# - Pattern Recognition Lab, Friedrich-Alexander-Universitaet Erlangen-Nuernberg, Germany
+# - Department of Biomedical Engineering, Peking University, Beijing, China
+# - New England Eye Center, Tufts Medical Center, Boston, MA, US
+# v1.0: Updated on Mar 20, 2019
+# @author: Daniel Stromer - EMAIL:daniel.stromer@fau.de
+# Copyright (C) 2018-2019 - Daniel Stromer
+# PRLE is developed as an Open Source project under the GNU General Public License (GPL) v3.0.

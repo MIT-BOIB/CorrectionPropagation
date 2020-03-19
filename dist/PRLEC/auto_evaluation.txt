@@ -1,0 +1,18 @@
+r=32,128
+l=4,32
+spacing=128
+
+# r denotes the region size in pixel; e.g. r=32 describes a region of 32x32 pixel
+# l denotes the lines spacing in the given region r; e.g. l=4 corrects every fourth line in the region
+# spacing denotes the stride between subsequent calculations over the en face plane: e.g. spacing=1 means 
+# that the rectangle r is shifted by 1 pixel to the right/down in the next step
+#
+# This framework evolved from a collaboration of:
+# - Research Laboratory of Electronics, Massachusetts Institute of Technology, Cambdrige, MA, US
+# - Pattern Recognition Lab, Friedrich-Alexander-Universitaet Erlangen-Nuernberg, Germany
+# - Department of Biomedical Engineering, Peking University, Beijing, China
+# - New England Eye Center, Tufts Medical Center, Boston, MA, US
+# v1.0: Updated on Mar 20, 2019
+# @author: Daniel Stromer - EMAIL:daniel.stromer@fau.de
+# Copyright (C) 2018-2019 - Daniel Stromer
+# PRLE is developed as an Open Source project under the GNU General Public License (GPL) v3.0.
