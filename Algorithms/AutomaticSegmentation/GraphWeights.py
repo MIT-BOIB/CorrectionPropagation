@@ -16,7 +16,7 @@ import numpy as np
 import cv2
 from skimage import exposure
 
-def runWeightCalculation(volume, mode, dictParameters):
+def runWeightCalculation(volume, mode, dictParameters, isMatFile):
     """
         Calculating weights for modes
         
@@ -61,11 +61,11 @@ def runWeightCalculation(volume, mode, dictParameters):
 
     volume_smoothed = np.swapaxes(volume_smoothed, axis1 = 0, axis2 = 1)
     
-    volume_res = [calculateGradients(_slice, mode, BF_bscan) for _slice in volume_smoothed]
+    volume_res = [calculateGradients(_slice, mode, BF_bscan,isMatFile) for _slice in volume_smoothed]
     
     return volume_res
 
-def calculateGradients(_slice, mode, BF_bscan):
+def calculateGradients(_slice, mode, BF_bscan,isMatFile):
     """
         Helper to calculate gradients
         
@@ -88,8 +88,13 @@ def calculateGradients(_slice, mode, BF_bscan):
         grad = np.where(grad > 0 , grad, 0)
     
         img_center = _slice.shape[0]//2
-        p2, p98 = np.percentile(grad[img_center-130:img_center-20,:], (2, 98))
-        grad[img_center-130:img_center-20,:] = exposure.rescale_intensity(grad[img_center-130:img_center-20,:], in_range=(p2, p98))
+        #mat file vs MIT file
+        if isMatFile:
+            p2, p98 = np.percentile(grad[img_center-200:img_center-20,:], (2, 98))
+            grad[img_center-200:img_center-20,:] = exposure.rescale_intensity(grad[img_center-200:img_center-20,:], in_range=(p2, p98))  
+        else:
+            p2, p98 = np.percentile(grad[img_center-130:img_center-20,:], (2, 98))
+            grad[img_center-130:img_center-20,:] = exposure.rescale_intensity(grad[img_center-130:img_center-20,:], in_range=(p2, p98))
         return grad
     else:
         return result

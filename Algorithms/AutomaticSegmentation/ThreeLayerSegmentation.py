@@ -31,7 +31,7 @@ class LayerSegmentation:
         surface is smooth and accurate. The exponential weights are derived from 
         the smoothed gradient images. 
     """
-    def __init__(self, volume, scaling = 1, flattening_factor = 4, statusText=""):
+    def __init__(self, volume, isMatFile, scaling = 1, flattening_factor = 4, statusText=""):
         """
             Initializing
             
@@ -39,6 +39,8 @@ class LayerSegmentation:
             -----------
             volume: ndarray 
                 oct volume
+            isMatFile: boolean
+                true if mat file, false if tiff file
                 
             Optional
             -----------
@@ -53,6 +55,7 @@ class LayerSegmentation:
         self.scaling = scaling
         self.statusText=statusText
         self.dictParameters = readThreeLayerDict()
+        self.isMatFile = isMatFile
         #set volume to 0...1
         max_value = np.max(volume)
         self.oct_volume = [vol_slice/max_value for vol_slice in volume]
@@ -79,14 +82,14 @@ class LayerSegmentation:
                 self.statusText.set("Running 3-Layer segmentation...\nCalculating Graph Weights of "+mode)
             except:
                 pass
-            smoothed = GraphWeights.runWeightCalculation(self.oct_volume, mode, self.dictParameters)
+            smoothed = GraphWeights.runWeightCalculation(self.oct_volume, mode, self.dictParameters,self.isMatFile)
 
             #execute graph cut
             try:
                 self.statusText.set("Running 3-Layer segmentation...\nExecuting GraphCut of "+mode)
             except:
                 pass
-            result = execute_graphcut(self.oct_volume, smoothed, self.scaling, mode, self.dictParameters)
+            result = execute_graphcut(self.oct_volume, smoothed, self.scaling, mode, self.dictParameters,self.isMatFile)
 
             if mode is 'RPE':
                 #Approximate BM from RPE
@@ -156,6 +159,9 @@ Processing C:/tmp/patient5/merged_structural.tiff
 
 if __name__ == '__main__':
     
+    #define please
+    isMatFile = False
+    
     import warnings
     warnings.filterwarnings("ignore")
     
@@ -182,7 +188,7 @@ if __name__ == '__main__':
             
             volume = io.imread(filename_path).astype(np.float32)
 
-            layer_seg = LayerSegmentation(volume, scaling = 1, flattening_factor = 4, statusText=None)
+            layer_seg = LayerSegmentation(volume,isMatFile, scaling = 1, flattening_factor = 4, statusText=None)
             
             result = layer_seg.runPipeline()
 

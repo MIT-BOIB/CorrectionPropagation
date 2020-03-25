@@ -33,7 +33,7 @@ class thread_pipeline (threading.Thread):
             storing the latest y_offset as input for next iteration -> runtime minimization
         
     """
-    def __init__(self, threadID ,volume_slice, gradient_slice, prior_shortest_path, scaling, UPORDOWN, mode, dictParameters):
+    def __init__(self, threadID , isMatFile, volume_slice, gradient_slice, prior_shortest_path, scaling, UPORDOWN, mode, dictParameters):
         """
             Initializing Pipeline.
             
@@ -42,6 +42,8 @@ class thread_pipeline (threading.Thread):
             ----------
             threadID: scalar
                 slice number
+            isMatFile: boolean
+                true if mat file, false if tiff file
             volume_slice: numpy array 2D
                 slice that will be processed
             gradient_slice: numpy array 2D
@@ -66,6 +68,7 @@ class thread_pipeline (threading.Thread):
         self.scaling = scaling
         self.mode = mode
         self.dictParameters = dictParameters
+        self.isMatFile = isMatFile
         
     def run(self):
         """
@@ -92,9 +95,9 @@ class thread_pipeline (threading.Thread):
         
         #Calculate graph
         if(self.mode is 'RPE'):
-            graph, endnode, y_offset = gm_rpe.getRPEGraph(self.gradient_slice, self.scaling, self.prior_shortest_path, y_offset)
+            graph, endnode, y_offset = gm_rpe.getRPEGraph(self.gradient_slice, self.scaling, self.prior_shortest_path, y_offset,self.isMatFile)
         else:
-            graph, endnode, y_offset = gm_vitnfl.getILMGraph(self.gradient_slice, self.scaling, self.prior_shortest_path, y_offset)
+            graph, endnode, y_offset = gm_vitnfl.getILMGraph(self.gradient_slice, self.scaling, self.prior_shortest_path, y_offset,self.isMatFile)
             
         #calculate shortest path - if invalid, take predecessor's
         shortest_path = np.asarray(graph.get_shortest_paths(v=0, to=endnode, weights = 'weight'))
@@ -113,7 +116,7 @@ class thread_pipeline (threading.Thread):
             y_offset_dict[-1] = y_offset
 
     
-def execute_graphcut(oct_volume, gradient_volume, scaling, mode, dictParameters):
+def execute_graphcut(oct_volume, gradient_volume, scaling, mode, dictParameters,isMatFile):
     """
         Execute Graph-Cut algorithm.
         
@@ -129,7 +132,8 @@ def execute_graphcut(oct_volume, gradient_volume, scaling, mode, dictParameters)
             mode ='RPE' segments RPE, 'ILM' the inner limiting membrane
         dictParameters: dictionary
             Parameters from parameters.txt
-            
+        isMatFile: boolean
+            true if mat file, false if tiff file
         Return
         ------
         result: numpy array 2D/3D
@@ -150,9 +154,9 @@ def execute_graphcut(oct_volume, gradient_volume, scaling, mode, dictParameters)
         if index == 0:
             #compute graph and shortest path
             if(mode is 'RPE'):
-                initial_graph, endnode, y_offset = gm_rpe.getRPEGraph(gradient_volume[center_slice], scaling, None, None)
+                initial_graph, endnode, y_offset = gm_rpe.getRPEGraph(gradient_volume[center_slice], scaling, None, None,isMatFile)
             else:
-                initial_graph, endnode, y_offset = gm_vitnfl.getILMGraph(gradient_volume[center_slice], scaling, None, None)
+                initial_graph, endnode, y_offset = gm_vitnfl.getILMGraph(gradient_volume[center_slice], scaling, None, None,isMatFile)
                 
             shortestPath[1] = np.asarray(initial_graph.get_shortest_paths(v=0, to=endnode, weights = 'weight')).flatten()  
             shortestPath[-1] = shortestPath[1]
@@ -172,11 +176,11 @@ def execute_graphcut(oct_volume, gradient_volume, scaling, mode, dictParameters)
         #multithreaded pipeline execution
         threads = []
         if (center_slice-index) >= 0:
-            thread = thread_pipeline((center_slice-index),oct_volume[(center_slice-index)], gradient_volume[(center_slice-index)], shortestPath[1],scaling, 'down', mode, dictParameters)
+            thread = thread_pipeline((center_slice-index),isMatFile, oct_volume[(center_slice-index)], gradient_volume[(center_slice-index)], shortestPath[1],scaling, 'down', mode, dictParameters)
             thread.start()
             threads.append(thread)
         if (center_slice+index) < len(gradient_volume):
-            thread = thread_pipeline((center_slice+index),oct_volume[(center_slice+index)], gradient_volume[(center_slice+index)], shortestPath[-1],scaling, 'up', mode, dictParameters)
+            thread = thread_pipeline((center_slice+index),isMatFile, oct_volume[(center_slice+index)], gradient_volume[(center_slice+index)], shortestPath[-1],scaling, 'up', mode, dictParameters)
             thread.start()
             threads.append(thread)
         

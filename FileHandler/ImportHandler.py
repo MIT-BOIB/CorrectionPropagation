@@ -18,6 +18,8 @@ from skimage import io
 import os
 from Visualization.Heatmap import calculateHeatmap
 from Algorithms.SlowScanRegistration import RPEBasedRegistration
+import scipy.io
+from FileHandler import ImportMatFilesHelper
 
 def loadVolume(directory, path=None, OCTA = False, merged = True, flattening_polynomial = 4):
     """ 
@@ -48,7 +50,7 @@ def loadVolume(directory, path=None, OCTA = False, merged = True, flattening_pol
             volume in rgb to visualize
     """    
     if(path is None):
-        filename =  filedialog.askopenfilename(initialdir = directory,title = "Select file",filetypes = (("tiff files","*.tiff"),("all files","*.*")))
+        filename =  filedialog.askopenfilename(initialdir = directory,title = "Select file",filetypes = (("all files","*.*"),("tiff files","*.tiff"),("mat files","*.mat")))
     else:
         filename = path
     
@@ -57,12 +59,19 @@ def loadVolume(directory, path=None, OCTA = False, merged = True, flattening_pol
     f.write("dir="+initialdir)
     f.close()
     
-    vol = io.imread(filename).astype('float32')
+    isMatFile = False
+    if(os.path.splitext(filename)[1] == '.mat'):
+        vol = ImportMatFilesHelper.loadmatfiles(filename).astype('float32')
+        isMatFile = True
+    else:
+        vol = io.imread(filename).astype('float32')
     shifts = np.zeros((vol.shape[0],vol.shape[2]))
-    
-    if merged == False:
-        vol, shifts = RPEBasedRegistration.runSlowScanRegistration(vol, 2)
-    
+
+    try:
+        if merged == False:
+            vol, shifts = RPEBasedRegistration.runSlowScanRegistration(vol, 2)
+    except Exception as e:
+        print("Slow scan registration did not work")
     volume_original = vol.copy()
     
     vol = np.swapaxes(np.asarray(vol), axis1 = 0, axis2 = 1)
@@ -72,7 +81,8 @@ def loadVolume(directory, path=None, OCTA = False, merged = True, flattening_pol
     vol_rgb[:,:,:,1] = vol_b[:,:,:]
     vol_rgb[:,:,:,2] = vol_b[:,:,:]
     
-    return initialdir, np.asarray(shifts), np.asarray(volume_original), vol_rgb
+    
+    return initialdir, np.asarray(shifts), np.asarray(volume_original), vol_rgb, (isMatFile, filename)
 
 def loadGroundtruthVolume(directory, shiftedValues):
     """ Load volume from '.tif' stack
@@ -155,6 +165,42 @@ def loadCompleteSegmentation(directory, shifts, path=None):
     else:
         segmentation = io.imread(path)
     
+    try:
+        shifts = shifts.astype('int32')
+        for z in range(segmentation.shape[0]):
+            for x in range (segmentation.shape[2]):
+                segmentation[z,:,x] = np.roll(segmentation[z,:,x],shifts[z][x], axis= 0)
+    except Exception as e:
+        print('No volume loaded',e)
+
+    heatmap = calculateHeatmap(segmentation)
+    return segmentation, heatmap
+
+def loadCompleteSegmentationFromMat(isMatFile, shifts, path=None, layer_values=None):
+    """ Load Segmentation
+    
+    Parameters
+    ----------
+    directory : string
+        current path
+    shifts : list of ndarrays
+        the A-scan shift values for flattening: format [B-scan number][Column,y-coordinate]
+        
+    Optional
+    ----------
+    path : string, optional
+        given path for skipping manual selection
+        
+    Returns
+    ----------
+    segmentation : ndarray
+        the segmentation
+    heatmap: ndarray
+        calculated rpe/bruchs heatmap
+    """ 
+ 
+    segmentation = ImportMatFilesHelper.loadmatfiles_segmentation(isMatFile[1],layer_values).astype('float32')
+
     try:
         shifts = shifts.astype('int32')
         for z in range(segmentation.shape[0]):

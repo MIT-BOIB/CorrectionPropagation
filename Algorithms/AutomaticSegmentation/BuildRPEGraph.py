@@ -18,7 +18,7 @@ import cv2
 
 w_min = 1e-5
 
-def getRPEGraph(_slice, scaling, shortest_path,  y_offset):
+def getRPEGraph(_slice, scaling, shortest_path,  y_offset, isMatFile):
     """ 
         Construct the undirected, weighted RPE graph from the calculated.
         
@@ -36,6 +36,8 @@ def getRPEGraph(_slice, scaling, shortest_path,  y_offset):
             the shortest path from the predecessor
         y_offset: scalar
             the top row extracted from the predecessor
+        isMatFile: boolean
+            true if mat file, false if tiff file
             
         Returns
         ---------
@@ -52,8 +54,12 @@ def getRPEGraph(_slice, scaling, shortest_path,  y_offset):
     if shortest_path is None:
         # limit to certain region above/beneath flattened RPE
         slice_center_y = _slice.shape[0]//2
+        #tiff data or mat file
         start_slice = int((slice_center_y-50)*scaling)
         end_slice = int((slice_center_y+20)*scaling)
+        if isMatFile == True:
+            start_slice = int((slice_center_y-50)*scaling)
+            end_slice = int((slice_center_y+20)*scaling)
         slice_buffer = _slice[start_slice:end_slice,:]
         slice_buffer = np.where(slice_buffer == 0, 0.1, slice_buffer)
         #add a column at the left and right border for start and end points (adding value +2.0 to the right border 
@@ -77,8 +83,13 @@ def getRPEGraph(_slice, scaling, shortest_path,  y_offset):
         buffer_result = np.zeros((slice_buffer.shape)).astype(np.float32)
         buffer_result[path_y, path_x] = 1.0
         #dilate shortest path from predecessor
+        
+        #matfile vs Tiff file
         kernel = np.maximum(int(10*scaling),2)
         y_offset = np.maximum(int(10*scaling),2)
+        if isMatFile == True:
+            kernel = np.maximum(int(15*scaling),2)
+            y_offset = np.maximum(int(15*scaling),2)
         buffer_result[:,1:-1] = cv2.dilate(buffer_result[:,1:-1], np.ones((kernel,kernel),np.uint8),iterations = 1)
         buffer_result = np.where(buffer_result == 1, slice_buffer, np.nan)
         buffer_result = np.where(slice_buffer[min_y-y_offset:max_y+y_offset] == 0, 0, buffer_result[min_y-y_offset:max_y+y_offset])

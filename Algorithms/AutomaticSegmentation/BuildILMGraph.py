@@ -21,7 +21,7 @@ w_min = 1e-5
 graph_list = {}
 endnodes = {}
 
-def getILMGraph(_slice, scaling, shortest_path , y_offset):
+def getILMGraph(_slice, scaling, shortest_path , y_offset, isMatFile):
     """ 
         Construct the undirected, weighted ILM graph from the weights.
         
@@ -39,6 +39,8 @@ def getILMGraph(_slice, scaling, shortest_path , y_offset):
             the shortest path from the predecessor
         y_offset: scalar
             the top row extracted from the predecessor
+        isMatFile: boolean
+            true if mat file, false if tiff file
             
         Returns
         ---------
@@ -56,8 +58,13 @@ def getILMGraph(_slice, scaling, shortest_path , y_offset):
     if shortest_path is None:
         _slice_center_y = _slice.shape[0]//2
         #restrict area of search
+        
+        #mat file vs tiff file
         start__slice = int((_slice_center_y-300)*scaling)
         end__slice = int((_slice_center_y-60)*scaling)
+        if isMatFile == True:
+            start__slice = int((_slice_center_y-200)*scaling)
+            end__slice = int((_slice_center_y-20)*scaling)
         _slice_buffer = _slice[start__slice:end__slice,:]
         #add border to left and right
         _slice_buffer = cv2.copyMakeBorder(cv2.copyMakeBorder(_slice_buffer, top=0,bottom=0, left=0, right=1, borderType= cv2.BORDER_CONSTANT, value =  2.0), top=0,bottom=0, left=1, right=0, borderType= cv2.BORDER_CONSTANT, value = -2.0)
@@ -80,8 +87,13 @@ def getILMGraph(_slice, scaling, shortest_path , y_offset):
         buffer_result = np.zeros((_slice_buffer.shape)).astype(np.float32)
         buffer_result[path_y, path_x] = 1.0
         #dilate predecessors shortest path
+        #mat file vs tiff file
         kernel = np.maximum(int(10*scaling),2)
         y_offset = np.maximum(int(10*scaling),2)
+        if isMatFile == True:
+            kernel = np.maximum(int(15*scaling),2)
+            y_offset = np.maximum(int(15*scaling),2)
+
         buffer_result[:,1:-1] = cv2.dilate(buffer_result[:,1:-1], np.ones((kernel,kernel),np.uint8),iterations = 1)
         
         #set invalid pixels to nan

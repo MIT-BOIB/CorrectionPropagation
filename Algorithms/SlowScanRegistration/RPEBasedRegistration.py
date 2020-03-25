@@ -67,6 +67,7 @@ def runSlowScanRegistration(volume, flattening_polynomial):
         shiftedValues.append(roll_value)
         shiftedVolume.append(new_slice)
         counter += 1
+        prev_y = y_idx
         
     return shiftedVolume, shiftedValues
 
